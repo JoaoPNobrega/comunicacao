@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz de Recuperação — Infraestrutura de Comunicação</title>
+<style>
+  :root{
+    --bg:#f4f5fb; --bg2:#ffffff; --card:#ffffff; --ink:#1f2333; --ink2:#5b6070;
+    --line:#e5e7f0; --brand:#6366f1; --brand2:#7c3aed;
+    --ok:#16a34a; --okbg:#e7f6ec; --bad:#dc2626; --badbg:#fdeaea;
+    --calc:#d97706; --calcbg:#fdf5e6; --calcline:#f3d9a4;
+    --shadow:0 6px 24px rgba(30,35,80,.07);
+    --a1:#2563eb; --a2:#7c3aed; --a3:#0891b2; --a4:#059669; --a5:#ea580c; --a6:#db2777;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f1220; --bg2:#161a2b; --card:#181c2e; --ink:#e9ebf5; --ink2:#9aa0b6;
+      --line:#2a2f45; --brand:#818cf8; --brand2:#a78bfa;
+      --ok:#4ade80; --okbg:#12301f; --bad:#f87171; --badbg:#3a1717;
+      --calc:#fbbf24; --calcbg:#2a2210; --calcline:#5a4718;
+      --shadow:0 8px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f1220; --bg2:#161a2b; --card:#181c2e; --ink:#e9ebf5; --ink2:#9aa0b6;
+    --line:#2a2f45; --brand:#818cf8; --brand2:#a78bfa;
+    --ok:#4ade80; --okbg:#12301f; --bad:#f87171; --badbg:#3a1717;
+    --calc:#fbbf24; --calcbg:#2a2210; --calcline:#5a4718;
+    --shadow:0 8px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;-webkit-font-smoothing:antialiased;
+    overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+  .mono{font-family:ui-monospace,"Cascadia Code","Consolas","SF Mono",monospace}
+  .wrap{max-width:840px;margin:0 auto;padding:20px 16px 80px}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:20;background:var(--bg2);border-bottom:1px solid var(--line);
+    box-shadow:var(--shadow)}
+  .hbar{max-width:840px;margin:0 auto;padding:12px 16px}
+  .htop{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .logo{width:34px;height:34px;border-radius:9px;flex:none;
+    background:linear-gradient(135deg,var(--brand),var(--brand2));
+    display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}
+  .htitle{font-weight:800;font-size:16px;letter-spacing:-.2px}
+  .hsub{color:var(--ink2);font-size:12.5px}
+  .spacer{flex:1}
+  .iconbtn{border:1px solid var(--line);background:var(--card);color:var(--ink);
+    width:38px;height:38px;border-radius:10px;cursor:pointer;font-size:16px;flex:none}
+  .iconbtn:hover{border-color:var(--brand)}
+  .score{display:flex;gap:14px;align-items:center;margin-top:10px;flex-wrap:wrap}
+  .scorepill{background:var(--bg);border:1px solid var(--line);border-radius:999px;
+    padding:5px 12px;font-size:13px;font-weight:600}
+  .scorepill b{color:var(--brand)}
+  .bar{flex:1;min-width:140px;height:9px;background:var(--line);border-radius:999px;overflow:hidden}
+  .bar>i{display:block;height:100%;width:0;border-radius:999px;
+    background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width .35s ease}
+
+  /* Chips */
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .chip{border:1px solid var(--line);background:var(--card);color:var(--ink2);
+    padding:6px 13px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:600;
+    transition:.15s}
+  .chip:hover{border-color:var(--brand);color:var(--ink)}
+  .chip.active{background:var(--brand);border-color:var(--brand);color:#fff}
+  .chip.calc.active{background:var(--calc);border-color:var(--calc);color:#3a2a05}
+  .chip.open.active{background:var(--a4);border-color:var(--a4);color:#fff}
+
+  /* Intro */
+  .intro{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:18px 20px;margin:18px 0;box-shadow:var(--shadow)}
+  .intro h2{margin:0 0 6px;font-size:17px}
+  .intro p{margin:6px 0;color:var(--ink2);font-size:14px}
+  .intro .goal{color:var(--ink);font-weight:600}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--ink2)}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+  /* Card */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:20px;margin:16px 0;box-shadow:var(--shadow)}
+  .card-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .badge{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:7px;color:#fff}
+  .aula-1{background:var(--a1)} .aula-2{background:var(--a2)} .aula-3{background:var(--a3)}
+  .aula-4{background:var(--a4)} .aula-5{background:var(--a5)} .aula-6{background:var(--a6)}
+  .tipo-calc{background:var(--calcbg);color:var(--calc);border:1px solid var(--calcline)}
+  .tipo-conc{background:transparent;color:var(--brand);border:1px solid var(--brand)}
+  .tipo-open{background:transparent;color:var(--a4);border:1px solid var(--a4)}
+  .qnum{margin-left:auto;color:var(--ink2);font-size:12.5px;font-weight:600}
+  .pergunta{font-size:16px;font-weight:600;margin-bottom:14px;letter-spacing:-.1px}
+
+  /* Options */
+  .opcoes{display:flex;flex-direction:column;gap:9px}
+  .opcao{display:flex;align-items:flex-start;gap:11px;text-align:left;width:100%;
+    background:var(--bg2);border:1.5px solid var(--line);border-radius:12px;
+    padding:12px 14px;cursor:pointer;color:var(--ink);font-size:14.5px;transition:.13s;font-family:inherit}
+  .opcao:hover:not(:disabled){border-color:var(--brand);transform:translateY(-1px)}
+  .opcao:disabled{cursor:default}
+  .letra{flex:none;width:26px;height:26px;border-radius:8px;background:var(--line);
+    color:var(--ink);display:grid;place-items:center;font-weight:800;font-size:13px}
+  .opcao .txt{padding-top:2px}
+  .opcao.correct{border-color:var(--ok);background:var(--okbg)}
+  .opcao.correct .letra{background:var(--ok);color:#fff}
+  .opcao.wrong{border-color:var(--bad);background:var(--badbg)}
+  .opcao.wrong .letra{background:var(--bad);color:#fff}
+  .opcao.dim{opacity:.5}
+  .mark{margin-left:auto;font-weight:800;font-size:16px;flex:none;padding-top:1px}
+
+  /* Feedback */
+  .feedback{margin-top:14px}
+  .explica{background:var(--bg2);border:1px solid var(--line);border-left:4px solid var(--brand);
+    border-radius:10px;padding:12px 14px;font-size:14px;color:var(--ink)}
+  .explica b{color:var(--brand)}
+
+  /* Solution (calc) */
+  .solucao{background:var(--calcbg);border:1px solid var(--calcline);border-radius:12px;
+    padding:14px 16px}
+  .sol-titulo{font-weight:800;color:var(--calc);font-size:13.5px;margin-bottom:10px;
+    display:flex;align-items:center;gap:7px}
+  .sol-linha{display:flex;gap:12px;padding:3px 0;align-items:baseline}
+  .sol-rot{flex:none;width:74px;text-align:right;color:var(--ink2);font-size:12px;
+    font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+  .sol-exp{font-size:14.5px;color:var(--ink)}
+  .sol-exp.mono{font-size:14px}
+  .hl{background:rgba(217,119,6,.16);border-radius:5px;padding:0 4px;font-weight:700}
+  .sol-resposta{margin-top:11px;padding-top:11px;border-top:1px dashed var(--calcline);
+    font-size:15px}
+  .sol-resposta strong{background:var(--calc);color:#2a1e04;padding:2px 10px;border-radius:7px;
+    font-size:16px;margin-left:4px}
+
+  /* Questões abertas */
+  .reveal{margin-top:4px;border:1.5px solid var(--a4);background:transparent;color:var(--a4);
+    font-weight:700;font-size:14px;padding:10px 16px;border-radius:11px;cursor:pointer;
+    font-family:inherit;transition:.13s}
+  .reveal:hover{background:var(--a4);color:#fff}
+  .resposta{margin-top:12px;background:var(--bg2);border:1px solid var(--line);
+    border-left:4px solid var(--a4);border-radius:11px;padding:14px 16px;font-size:14.5px;line-height:1.6}
+  .rtit{font-weight:800;color:var(--a4);font-size:12px;text-transform:uppercase;
+    letter-spacing:.5px;margin-bottom:8px}
+  #revealAll{width:auto;padding:0 14px;height:38px;border-radius:10px;cursor:pointer;font-family:inherit;
+    border:1px solid var(--a4);background:var(--a4);color:#fff;font-size:13px;font-weight:700}
+  body[data-mode="abertas"] .mc-only{display:none}
+  body[data-mode="mc"] .open-only{display:none}
+  .empty{text-align:center;color:var(--ink2);padding:40px 0;font-size:14px}
+  footer{text-align:center;color:var(--ink2);font-size:12.5px;margin-top:30px;line-height:1.7}
+
+  @media (max-width:600px){
+    .wrap{padding:14px 12px 70px}
+    .hbar{padding:10px 12px}
+    .htitle{font-size:14.5px;line-height:1.2}
+    .hsub{font-size:11px}
+    .logo{width:30px;height:30px;font-size:14px}
+    .score{gap:8px;margin-top:9px}
+    .scorepill{font-size:12px;padding:4px 10px}
+    .bar{min-width:70px}
+    /* filtros viram uma faixa rolável na horizontal (não empilham) */
+    .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;margin:12px -12px 0;padding:0 12px 3px}
+    .chips::-webkit-scrollbar{display:none}
+    .chip{flex:none;font-size:12.5px}
+    .intro{padding:16px;border-radius:14px;margin:14px 0}
+    .intro h2{font-size:16px}
+    .intro p{font-size:13.5px}
+    .card{padding:16px;border-radius:14px}
+    .pergunta{font-size:15.5px}
+    .opcao{padding:13px;font-size:15px}
+    .letra{width:24px;height:24px;font-size:12px}
+    .badge{font-size:11px}
+  }
+  @media (max-width:520px){
+    .sol-rot{width:100%;text-align:left}
+    .sol-linha{flex-direction:column;gap:1px;padding:5px 0}
+    .qnum{margin-left:0}
+  }
+</style>
+</head>
+<body>
+<noscript>
+  <div style="margin:16px;padding:16px 18px;border:2px solid #dc2626;border-radius:12px;
+    background:#fdeaea;color:#7f1d1d;font-family:-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5">
+    <b>⚠️ Este quiz precisa de JavaScript para funcionar.</b><br>
+    Você abriu o arquivo num visualizador que não executa JavaScript
+    (prévia do WhatsApp, e-mail ou Google Drive). <b>Baixe o arquivo</b> e abra direto
+    num navegador — <b>Chrome</b> ou <b>Safari</b>. Toque nos “⋮ / ⤴ Compartilhar” e escolha
+    <b>“Abrir no navegador / Open in Chrome”</b>.
+  </div>
+</noscript>
+<script>
+/* Rede de segurança: se o script principal falhar (ex.: navegador antigo demais),
+   mostra uma mensagem em vez de uma tela em branco. Mantido em ES5 de propósito. */
+window.onerror = function(msg){
+  var box = document.getElementById('fatal-erro');
+  if(!box){
+    box = document.createElement('div');
+    box.id = 'fatal-erro';
+    box.style.cssText = 'margin:16px;padding:16px 18px;border:2px solid #dc2626;border-radius:12px;'+
+      'background:#fdeaea;color:#7f1d1d;font-family:-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5';
+    if(document.body){ document.body.insertBefore(box, document.body.firstChild); }
+  }
+  box.innerHTML = '<b>⚠️ O quiz não conseguiu carregar neste navegador.</b><br>'+
+    'Tente abrir num navegador atualizado (Chrome ou Safari). Detalhe técnico: '+msg;
+  return false;
+};
+</script>
+<header>
+  <div class="hbar">
+    <div class="htop">
+      <div class="logo">R</div>
+      <div>
+        <div class="htitle">Quiz de Recuperação</div>
+        <div class="hsub">Infraestrutura de Comunicação · Redes (Kurose &amp; Ross)</div>
+      </div>
+      <div class="spacer"></div>
+      <button class="iconbtn" id="theme" title="Alternar tema">🌙</button>
+    </div>
+    <div class="score">
+      <span class="scorepill mc-only">Acertos: <b id="hits">0</b> / <span id="answered">0</span></span>
+      <span class="scorepill mc-only" id="pct">0%</span>
+      <div class="bar mc-only"><i id="barfill"></i></div>
+      <button class="iconbtn open-only" id="revealAll">👁 Mostrar todas as respostas</button>
+      <button class="iconbtn" id="shuffle" title="Embaralhar" style="width:auto;padding:0 13px;font-size:13px;font-weight:700;background:var(--brand);border-color:var(--brand);color:#fff">🔀 Embaralhar</button>
+      <button class="iconbtn mc-only" id="reset" title="Recomeçar (mantém a ordem)" style="width:auto;padding:0 13px;font-size:13px;font-weight:700">↻ Recomeçar</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="intro">
+    <h2>🎯 Meta: tirar no mínimo 5</h2>
+    <p>Marque a alternativa que achar certa — o quiz corrige na hora (<span style="color:var(--ok);font-weight:700">verde</span> = acertou, <span style="color:var(--bad);font-weight:700">vermelho</span> = errou) e mostra a explicação. Nas questões de <b style="color:var(--calc)">cálculo</b>, aparece a <b style="color:var(--calc)">resolução passo a passo</b> (dados → fórmula → conta → resposta).</p>
+    <p class="goal">Como a prova é aberta: primeiro treine reconhecendo (aqui), depois feche o quiz e tente <u>escrever</u> a resposta de memória. Reconhecer é fácil; escrever é o que vale ponto na prova.</p>
+    <p>🔀 Sentindo que está decorando a <em>posição</em> da resposta em vez do conteúdo? Toque em <b style="color:var(--brand)">Embaralhar</b> — ele reordena as perguntas <u>e</u> as alternativas e zera o placar pra você testar de novo do zero.</p>
+    <p>✍️ Na aba <b style="color:var(--a4)">Questões abertas</b> ficam as perguntas dissertativas (estilo prova) com a <b>resposta-modelo</b> escrita. Leia a pergunta, formule a resposta <u>de cabeça</u> e só então toque em "Mostrar resposta" para conferir.</p>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--calc)"></span>Cálculo</span>
+      <span><span class="dot" style="background:var(--brand)"></span>Conceito</span>
+      <span><span class="dot" style="background:var(--a1)"></span>A1</span>
+      <span><span class="dot" style="background:var(--a2)"></span>A2</span>
+      <span><span class="dot" style="background:var(--a3)"></span>A3</span>
+      <span><span class="dot" style="background:var(--a4)"></span>A4</span>
+      <span><span class="dot" style="background:var(--a5)"></span>A5</span>
+      <span><span class="dot" style="background:var(--a6)"></span>A6</span>
+    </div>
+  </div>
+  <div id="list"></div>
+  <footer>
+    <span id="count"></span><br>
+    Gerado a partir das 7 aulas da disciplina · Funciona offline · Bons estudos, Pedro! 💪
+  </footer>
+</div>
+
+<script>
+const Q = [
+/* ================= AULA 1 ================= */
+{a:1,t:"conc",p:"Qual a definição de <b>protocolo</b> em redes?",
+ o:["Um conjunto de cabos e roteadores que conectam computadores.",
+    "O formato e a ordem das mensagens trocadas entre entidades comunicantes, e as ações tomadas no envio/recebimento.",
+    "Um programa que roda apenas nos roteadores do núcleo.",
+    "A velocidade máxima de transmissão de um enlace."],
+ c:1,e:"Protocolo = <b>formato</b> + <b>ordem</b> das mensagens + <b>ações</b> na transmissão/recebimento. Não é hardware nem velocidade."},
+
+{a:1,t:"conc",p:"Sobre comutação de <b>pacotes × circuitos</b>, qual afirmação é correta?",
+ o:["A comutação de pacotes reserva recursos fim a fim para cada fluxo.",
+    "A comutação de circuitos é mais eficiente em tráfego de rajada.",
+    "A comutação de pacotes usa multiplexação estatística e não reserva recursos.",
+    "FDM e TDM são técnicas da comutação de pacotes."],
+ c:2,e:"<b>Pacotes</b>: sem reserva, multiplexação estatística, bom p/ dados em rajada. <b>Circuitos</b>: reservam recursos (FDM/TDM), bom p/ tempo real."},
+
+{a:1,t:"calc",p:"Um pacote de <b>1500 bytes</b> será enviado por um enlace de <b>6 Mbps</b>. Qual o <b>atraso de transmissão</b>?",
+ o:["250 µs","2 ms","250 ms","12 ms"],c:1,
+ s:{d:["L = 1500 bytes = 12.000 bits","R = 6 Mbps = 6.000.000 bps"],
+    f:"d_trans = L / R",
+    k:["= 12.000 / 6.000.000","= 0,002 s"],r:"2 ms"}},
+
+{a:1,t:"calc",p:"Um enlace tem <b>3000 km</b> e velocidade de propagação <b>2×10⁸ m/s</b>. Qual o <b>atraso de propagação</b>?",
+ o:["15 ms","1,5 ms","150 ms","6,7 ms"],c:0,
+ s:{d:["d = 3000 km = 3×10⁶ m","s = 2×10⁸ m/s"],
+    f:"d_prop = d / s",
+    k:["= 3.000.000 / 200.000.000","= 0,015 s"],r:"15 ms"}},
+
+{a:1,t:"calc",p:"Servidor a <b>Rs = 100 Mbps</b>, cliente a <b>Rc = 40 Mbps</b>, através de um enlace de núcleo <b>R = 60 Mbps</b> (não compartilhado). Qual a <b>vazão fim a fim</b>?",
+ o:["100 Mbps","60 Mbps","40 Mbps","200 Mbps"],c:2,
+ s:{d:["Rs = 100 · R = 60 · Rc = 40 (Mbps)"],
+    f:"vazão = min(Rs, R, Rc)",
+    k:["= min(100, 60, 40)"],r:"40 Mbps (o gargalo é o cliente)"}},
+
+{a:1,t:"calc",p:"Um enlace de núcleo <b>R = 100 Mbps</b> é compartilhado igualmente por <b>10 conexões</b>. Cada uma tem Rs = 50 e Rc = 20 Mbps. Qual a <b>vazão de cada conexão</b>?",
+ o:["20 Mbps","10 Mbps","50 Mbps","100 Mbps"],c:1,
+ s:{d:["R = 100 Mbps ÷ 10 conexões","Rs = 50 · Rc = 20 (Mbps)"],
+    f:"vazão = min(Rs, Rc, R/10)",
+    k:["= min(50, 20, 100/10)","= min(50, 20, 10)"],r:"10 Mbps (o gargalo é a fatia do enlace)"}},
+
+{a:1,t:"calc",p:"Um pacote atravessa <b>3 enlaces</b> (2 roteadores no meio), cada um com tempo de transmissão <b>L/R = 5 ms</b>. Desprezando propagação e fila, qual o tempo total <b>store-and-forward</b>?",
+ o:["5 ms","10 ms","15 ms","20 ms"],c:2,
+ s:{d:["3 enlaces · cada L/R = 5 ms","store-and-forward: cada salto soma L/R inteiro"],
+    f:"T = n × (L/R)",
+    k:["= 3 × 5 ms"],r:"15 ms"}},
+
+{a:1,t:"conc",p:"A unidade de dados (PDU) da <b>camada de rede</b> é o:",
+ o:["Quadro (frame)","Segmento","Datagrama","Mensagem"],c:2,
+ e:"Sequência: <b>mensagem</b> (aplicação) → <b>segmento</b> (transporte) → <b>datagrama</b> (rede) → <b>quadro</b> (enlace)."},
+
+{a:1,t:"conc",p:"Um <b>switch</b> processa até qual camada? E um <b>roteador</b>?",
+ o:["Switch: rede · roteador: transporte","Switch: enlace · roteador: rede","Ambos: física","Switch: transporte · roteador: aplicação"],c:1,
+ e:"O <b>switch</b> para na camada de <b>enlace</b>; o <b>roteador</b> vai até a <b>rede</b>. Só os hosts têm a pilha completa (5 camadas)."},
+
+{a:1,t:"conc",p:"O que significa transmissão <b>store-and-forward</b>?",
+ o:["O roteador reenvia o pacote assim que o 1º bit chega.","O roteador precisa receber o pacote inteiro antes de reenviá-lo.","O pacote é armazenado permanentemente.","O pacote é descartado se a fila encher."],c:1,
+ e:"O roteador recebe o pacote <b>inteiro</b> antes de retransmitir → cada salto adiciona um L/R."},
+
+{a:1,t:"conc",p:"Qual NÃO é uma das <b>4 ameaças de segurança</b> apresentadas?",
+ o:["Malware","Sniffing (inspeção de pacotes)","Spoofing (falsificação de identidade)","Compressão de pacotes"],c:3,
+ e:"As 4 são: <b>malware</b>, <b>sniffing</b>, <b>spoofing</b> e <b>DoS/DDoS</b>. Compressão não é ameaça."},
+
+{a:1,t:"conc",p:"Sobre a rede de acesso <b>DSL</b>, o que é correto?",
+ o:["O meio é compartilhado entre centenas de casas.","Usa a linha telefônica dedicada até o DSLAM na central.","Leva fibra até dentro da residência.","É simétrico (upload = download)."],c:1,
+ e:"<b>DSL</b> = par trançado <b>dedicado</b> ao DSLAM, assimétrico (mais download). <b>HFC</b> é compartilhado; <b>FTTH</b> leva fibra até a casa."},
+
+/* ================= AULA 2 ================= */
+{a:2,t:"conc",p:"A <b>autoescalabilidade</b> é característica de qual arquitetura?",
+ o:["Cliente-servidor, por causa dos datacenters.","P2P: cada novo par adiciona demanda, mas também capacidade de upload.","Ambas igualmente.","Nenhuma; escala só depende do enlace."],c:1,
+ e:"No <b>P2P</b> os pares consomem E proveem serviço → autoescalável. O cliente-servidor escala <b>multiplicando servidores</b>."},
+
+{a:2,t:"conc",p:"O HTTP é <b>sem estado</b> (stateless). Isso significa que:",
+ o:["Ele não usa conexão TCP.","O servidor não guarda informação sobre requisições anteriores do cliente.","Ele não pode transferir imagens.","O cliente não mantém cookies."],c:1,
+ e:"Por ser stateless, os <b>cookies</b> (Set-cookie/Cookie + arquivo no cliente + BD no servidor) criam o estado que o HTTP não tem."},
+
+{a:2,t:"calc",p:"Conexão HTTP <b>não persistente</b>. RTT = 50 ms e o tempo de transmissão do objeto é 20 ms. Qual o tempo para obter <b>1 objeto</b>?",
+ o:["70 ms","120 ms","100 ms","50 ms"],c:1,
+ s:{d:["RTT = 50 ms","tempo de transmissão = 20 ms"],
+    f:"T = 2·RTT + transmissão",
+    k:["1 RTT p/ handshake TCP + 1 RTT p/ requisição/resposta","= 2 × 50 + 20"],r:"120 ms"}},
+
+{a:2,t:"calc",p:"Página com <b>1 HTML + 3 imagens</b>, conexões <b>não persistentes em série</b> (sem paralelismo), RTT = 100 ms (transmissão desprezível). Tempo total?",
+ o:["200 ms","400 ms","800 ms","100 ms"],c:2,
+ s:{d:["4 objetos, em série","cada objeto não persistente = 2·RTT","RTT = 100 ms"],
+    f:"T = 4 × (2·RTT)",
+    k:["= 4 × 2 × 100"],r:"800 ms (8 RTT)"}},
+
+{a:2,t:"calc",p:"Distribuição <b>cliente-servidor</b>: F = 10 Gb, upload do servidor us = 1 Gbps, N = 100 clientes, dmin = 2 Gbps. Qual o tempo mínimo <b>Dcs</b>?",
+ o:["5 s","100 s","1000 s","10 s"],c:2,
+ s:{d:["F = 10 Gb · us = 1 Gbps · N = 100 · dmin = 2 Gbps"],
+    f:"Dcs = max { N·F/us , F/dmin }",
+    k:["N·F/us = 100 × 10 / 1 = 1000","F/dmin = 10 / 2 = 5","= max(1000, 5)"],r:"1000 s (gargalo: upload do servidor, cresce com N)"}},
+
+{a:2,t:"conc",p:"Na consulta DNS em que o <b>servidor local faz todo o trabalho</b> (pergunta à raiz, ao TLD e ao autoritativo em sequência), o modo é:",
+ o:["Recursiva","Iterativa","Autoritativa","Reversa"],c:1,
+ e:"<b>Iterativa</b> = \"me diga a quem perguntar\" → o servidor local faz tudo. <b>Recursiva</b> = \"resolva para mim\" → carga sobe para os níveis altos."},
+
+{a:2,t:"conc",p:"Qual registro DNS mapeia um <b>apelido (alias)</b> para o nome canônico?",
+ o:["A","MX","CNAME","NS"],c:2,
+ e:"<b>A</b>: nome→IP · <b>NS</b>: domínio→servidor de nomes · <b>CNAME</b>: apelido→nome canônico · <b>MX</b>: domínio→servidor de correio."},
+
+{a:2,t:"conc",p:"O <b>QUIC</b> é um protocolo de qual camada? (pegadinha do slide)",
+ o:["Aplicação","Transporte (sobre UDP)","Rede","Enlace"],c:1,
+ e:"Pegadinha clássica: o QUIC é de <b>transporte</b>, roda sobre UDP e é a base do HTTP/3."},
+
+{a:2,t:"conc",p:"O <b>TLS</b> é implementado em qual camada?",
+ o:["Transporte","Aplicação","Rede","Sessão"],c:1,
+ e:"Apesar do nome \"Transport Layer Security\", o TLS é implementado na <b>aplicação</b>, como biblioteca sobre o TCP."},
+
+{a:2,t:"conc",p:"Comparando <b>SMTP e HTTP</b>:",
+ o:["SMTP é pull, HTTP é push.","SMTP é push, HTTP é pull.","Ambos são pull.","Ambos usam UDP."],c:1,
+ e:"<b>SMTP</b> empurra a mensagem ao servidor de destino (<b>push</b>, TCP 25). <b>HTTP</b> o cliente puxa o objeto (<b>pull</b>, TCP 80)."},
+
+{a:2,t:"conc",p:"Diferença entre <b>POP3 e IMAP</b>:",
+ o:["IMAP baixa-e-apaga sem estado; POP3 mantém pastas no servidor.","POP3 tipicamente baixa-e-apaga e não mantém estado; IMAP mantém mensagens/pastas no servidor.","Ambos usam UDP.","IMAP não permite baixar partes de mensagens."],c:1,
+ e:"<b>IMAP</b> mantém estado e pastas no servidor e permite baixar partes. <b>POP3</b> é simples, baixa-e-apaga."},
+
+{a:2,t:"conc",p:"LAN de 10 Mbps + enlace de acesso de 1,5 Mbps saturado. Qual a solução <b>barata</b>?",
+ o:["Aumentar o enlace de acesso para 10 Mbps.","Instalar um cache web (proxy) institucional na LAN.","Trocar todos os hosts.","Desligar o DNS."],c:1,
+ e:"O <b>cache</b> atende os acertos localmente a 10 Mbps, reduzindo o tráfego no enlace de 1,5 Mbps — solução barata."},
+
+{a:2,t:"conc",p:"O <b>HTTP/2</b> mitiga qual problema do HTTP/1.1?",
+ o:["Falta de criptografia.","HOL blocking, via multiplexação de frames numa única conexão TCP.","Ausência de DNS.","Cookies expirados."],c:1,
+ e:"O HTTP/2 intercala <b>frames</b> de vários objetos numa conexão TCP (mitiga o HOL blocking). O HTTP/3 (QUIC) resolve o HOL também no transporte."},
+
+{a:2,t:"conc",p:"Qual associação <b>protocolo → transporte/porta</b> está correta?",
+ o:["DNS → TCP 80","SMTP → UDP 25","DNS → UDP 53","HTTP → TCP 25"],c:2,
+ e:"HTTP TCP 80 · FTP 21/20 · SMTP TCP 25 · POP3 TCP 110 · <b>DNS UDP 53</b> · DHCP UDP 67/68."},
+
+/* ================= AULA 3 ================= */
+{a:3,t:"conc",p:"Qual NÃO é um motivo para o <b>UDP</b> existir?",
+ o:["Sem estabelecimento de conexão (menos RTT).","Cabeçalho pequeno (8 bytes).","Controle de congestionamento robusto.","Sem estado de conexão."],c:2,
+ e:"O UDP <b>não tem</b> controle de congestionamento — justamente por isso pode transmitir na taxa que a aplicação quiser."},
+
+{a:3,t:"conc",p:"O socket <b>UDP</b> é identificado por quantos campos na demultiplexação?",
+ o:["4 (quádrupla)","2: IP e porta de destino","1: só a porta","3"],c:1,
+ e:"<b>UDP</b> = (IP destino, porta destino). <b>TCP</b> = quádrupla (IP orig, porta orig, IP dest, porta dest)."},
+
+{a:3,t:"conc",p:"No <b>Go-Back-N</b>, ao estourar o temporizador, o remetente:",
+ o:["Retransmite só o pacote perdido.","Retransmite todos os pacotes não confirmados.","Fecha a conexão.","Envia um NAK."],c:1,
+ e:"<b>GBN</b>: ACK cumulativo, 1 timer, retransmite <b>tudo</b>. <b>SR</b>: ACK individual, 1 timer por pacote, retransmite <b>só aquele</b>."},
+
+{a:3,t:"conc",p:"Na <b>Repetição Seletiva (SR)</b>, ao receber um pacote fora de ordem (dentro da janela), o receptor:",
+ o:["Descarta e reenvia o último ACK.","Armazena no buffer e envia ACK individual.","Fecha a conexão.","Ignora o pacote."],c:1,
+ e:"O <b>SR</b> bufferiza os fora de ordem e dá ACK individual; o <b>GBN</b> descarta e reenvia o último ACK cumulativo."},
+
+{a:3,t:"calc",p:"<b>Stop-and-wait</b>: L/R = 1 ms e RTT = 99 ms. Qual a <b>utilização</b> do emissor?",
+ o:["50%","1%","10%","99%"],c:1,
+ s:{d:["L/R = 1 ms · RTT = 99 ms"],
+    f:"U = (L/R) / (RTT + L/R)",
+    k:["= 1 / (99 + 1)","= 1 / 100"],r:"1% (0,01)"}},
+
+{a:3,t:"calc",p:"Mesmo enlace (L/R = 1 ms, RTT = 99 ms), mas com <b>pipelining de 3 pacotes</b>. Qual a utilização?",
+ o:["1%","3%","33%","100%"],c:1,
+ s:{d:["N = 3 · L/R = 1 ms · RTT = 99 ms"],
+    f:"U = N·(L/R) / (RTT + L/R)",
+    k:["= 3 × 1 / 100","= 3 / 100"],r:"3% (o pipelining multiplica por N)"}},
+
+{a:3,t:"calc",p:"No <b>checksum</b>, a soma das palavras de 16 bits deu <span class='mono'>1101 1001 1100 1010</span>. Qual o valor do checksum?",
+ o:["1101 1001 1100 1010","0010 0110 0011 0101","0000 0000 0000 0000","1111 1111 1111 1111"],c:1,
+ s:{d:["soma = 1101 1001 1100 1010"],
+    f:"checksum = complemento de 1 (inverter todos os bits)",
+    k:["1101 1001 1100 1010","→ inverte cada bit →"],r:"0010 0110 0011 0101"}},
+
+{a:3,t:"conc",p:"O <b>rdt 3.0</b> adiciona qual mecanismo (em relação ao rdt 2.2) para tratar <b>perdas</b>?",
+ o:["Checksum","Número de sequência","Temporizador (timer)","NAK"],c:2,
+ e:"rdt 2.0: checksum + ACK/NAK · rdt 2.1/2.2: número de sequência · <b>rdt 3.0</b>: <b>temporizador</b> p/ perdas (\"alternância de bits\")."},
+
+{a:3,t:"conc",p:"Sobre comunicação lógica, é correto que:",
+ o:["Transporte entre hosts; rede entre processos.","Transporte entre processos; rede entre hosts.","Ambos entre roteadores.","Transporte roda nos roteadores."],c:1,
+ e:"<b>Transporte</b> = entre processos (usa portas). <b>Rede</b> = entre hosts. O transporte só roda nos sistemas finais, nunca nos roteadores."},
+
+/* ================= AULA 4 ================= */
+{a:4,t:"conc",p:"A <b>apresentação de três vias (3-way handshake)</b> do TCP é:",
+ o:["SYN → ACK → FIN","SYN → SYN+ACK → ACK","FIN → ACK → FIN","ACK → SYN → ACK"],c:1,
+ e:"Cliente envia <b>SYN</b>, servidor responde <b>SYN+ACK</b>, cliente envia <b>ACK</b> (o 3º já pode levar dados)."},
+
+{a:4,t:"calc",p:"<b>EstimatedRTT</b>: valor atual = 200 ms, nova amostra = 240 ms, α = 0,125. Qual o novo EstimatedRTT?",
+ o:["240 ms","205 ms","200 ms","220 ms"],c:1,
+ s:{d:["EstimatedRTT atual = 200 ms","SampleRTT = 240 ms · α = 0,125"],
+    f:"EstimatedRTT = (1−α)·EstimatedRTT + α·SampleRTT",
+    k:["= 0,875 × 200 + 0,125 × 240","= 175 + 30"],r:"205 ms"}},
+
+{a:4,t:"calc",p:"<b>TimeoutInterval</b> com EstimatedRTT = 205 ms e DevRTT = 25 ms. Qual o timeout?",
+ o:["230 ms","305 ms","205 ms","280 ms"],c:1,
+ s:{d:["EstimatedRTT = 205 ms · DevRTT = 25 ms"],
+    f:"Timeout = EstimatedRTT + 4·DevRTT",
+    k:["= 205 + 4 × 25","= 205 + 100"],r:"305 ms"}},
+
+{a:4,t:"calc",p:"<b>DevRTT</b>: valor atual = 20 ms, |amostra − estimado| = 40 ms, β = 0,25. Qual o novo DevRTT?",
+ o:["25 ms","20 ms","40 ms","15 ms"],c:0,
+ s:{d:["DevRTT atual = 20 ms","|Sample − Estimated| = 40 ms · β = 0,25"],
+    f:"DevRTT = (1−β)·DevRTT + β·|Sample − Estimated|",
+    k:["= 0,75 × 20 + 0,25 × 40","= 15 + 10"],r:"25 ms"}},
+
+{a:4,t:"conc",p:"A <b>retransmissão rápida (fast retransmit)</b> é disparada por:",
+ o:["1 timeout","3 ACKs duplicados","1 ACK","janela zero"],c:1,
+ e:"Ao receber <b>3 ACKs duplicados</b>, o TCP retransmite o segmento pendente <b>sem esperar o timeout</b>."},
+
+{a:4,t:"conc",p:"O <b>controle de fluxo</b> do TCP protege:",
+ o:["A rede (roteadores).","O receptor (buffer), via rwnd.","O remetente.","O DNS."],c:1,
+ e:"<b>Fluxo (rwnd)</b> protege o receptor; <b>congestionamento (cwnd)</b> protege a rede. Dados em trânsito ≤ min(cwnd, rwnd)."},
+
+{a:4,t:"conc",p:"Durante o <b>slow start</b>, a janela de congestionamento (cwnd):",
+ o:["Cresce 1 MSS por RTT (linear).","Dobra a cada RTT (exponencial).","Fica constante.","Cai pela metade a cada ACK."],c:1,
+ e:"<b>Slow start</b>: +1 MSS por ACK → dobra por RTT (<b>exponencial</b>). <b>Congestion avoidance</b>: +1 MSS por RTT (linear)."},
+
+{a:4,t:"calc",p:"TCP com cwnd = <b>16 MSS</b> sofre um <b>timeout</b>. Quanto ficam ssthresh e cwnd?",
+ o:["ssthresh = 16, cwnd = 16","ssthresh = 8, cwnd = 1 MSS","ssthresh = 8, cwnd = 8","ssthresh = 32, cwnd = 1"],c:1,
+ s:{d:["cwnd = 16 MSS · evento = TIMEOUT"],
+    f:"ssthresh = cwnd/2 ; cwnd = 1 MSS",
+    k:["ssthresh = 16 / 2 = 8","cwnd volta a 1 MSS (recomeça slow start)"],r:"ssthresh = 8 MSS · cwnd = 1 MSS"}},
+
+{a:4,t:"conc",p:"Diferença entre <b>TCP Tahoe e Reno</b>:",
+ o:["Tahoe usa fast recovery; Reno não.","Em 3 ACKs duplicados, Tahoe zera cwnd=1 e Reno faz fast recovery (cai à metade).","São idênticos.","Reno não trata timeout."],c:1,
+ e:"<b>Tahoe</b> trata qualquer perda como cwnd=1. <b>Reno</b> distingue: 3 dup ACKs → metade + fast recovery; só o timeout zera para 1."},
+
+{a:4,t:"calc",p:"Vazão TCP aproximada com cwnd = <b>15.000 bytes</b> e RTT = <b>30 ms</b>.",
+ o:["4 Mbps","400 Kbps","40 Mbps","500 Kbps"],c:0,
+ s:{d:["cwnd = 15.000 bytes = 120.000 bits","RTT = 30 ms = 0,03 s"],
+    f:"vazão ≈ cwnd / RTT",
+    k:["= 120.000 / 0,03"],r:"4 Mbps"}},
+
+{a:4,t:"conc",p:"Sobre o <b>QUIC</b>, é correto que:",
+ o:["Roda sobre TCP.","É protocolo de aplicação puro.","Roda sobre UDP, embute a criptografia do TLS e usa ~1 RTT no handshake.","Não tem controle de congestionamento."],c:2,
+ e:"QUIC (RFC 9000): transporte <b>sobre UDP</b>, base do HTTP/3, múltiplos streams (sem HOL), criptografia embutida, handshake ~1 RTT."},
+
+{a:4,t:"conc",p:"A \"conexão\" TCP é um exemplo de comutação de circuitos?",
+ o:["Sim, reserva banda nos roteadores.","Não; é lógica, existe só nos hosts, sem reserva nos roteadores.","Sim, usa TDM.","Só em redes ATM."],c:1,
+ e:"Pegadinha: a conexão TCP é <b>lógica</b> (estado só nos hosts). A rede continua best-effort por pacotes, sem reserva."},
+
+/* ================= AULA 5 ================= */
+{a:5,t:"conc",p:"Diferença entre <b>repasse (forwarding)</b> e <b>roteamento (routing)</b>:",
+ o:["Repasse é global (controle); roteamento é local.","Repasse é local (plano de dados, hardware, ns); roteamento é global (plano de controle, software, ms).","São a mesma coisa.","Roteamento roda em hardware em nanossegundos."],c:1,
+ e:"<b>Repasse</b>: mover o pacote entrada→saída num roteador (tabela). <b>Roteamento</b>: definir o caminho fim a fim (algoritmo)."},
+
+{a:5,t:"calc",p:"<b>Prefixo mais longo</b>. Destino: <span class='mono'>...00011000 10101010</span>. Tabela: L1 <span class='mono'>00010***</span>→if0 · L2 <span class='mono'>00011000</span>→if1 · L3 <span class='mono'>00011***</span>→if2. Qual interface?",
+ o:["if0","if1","if2","if3"],c:1,
+ s:{d:["3º octeto do destino = 00011000"],
+    f:"regra: entre os que casam, vence o prefixo com MAIS bits fixos",
+    k:["casa L2 (00011000 = 24 bits fixos) ✔","casa L3 (00011*** = 21 bits fixos) ✔","24 > 21 → vence L2"],r:"if1"}},
+
+{a:5,t:"conc",p:"A ordem correta das mensagens <b>DHCP</b> é:",
+ o:["Request, Discover, Offer, ACK","Discover, Offer, Request, ACK","Offer, Discover, ACK, Request","ACK, Request, Offer, Discover"],c:1,
+ e:"<b>D-O-R-A</b>: Discover → Offer → Request → ACK. Servidor UDP 67, cliente UDP 68. Também fornece máscara, gateway e DNS."},
+
+{a:5,t:"conc",p:"Qual NÃO é uma faixa de endereços <b>privados (NAT / RFC 1918)</b>?",
+ o:["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","200.100.0.0/8"],c:3,
+ e:"Privadas: <b>10/8</b>, <b>172.16/12</b>, <b>192.168/16</b>. A opção 200.100.0.0/8 é pública/roteável."},
+
+{a:5,t:"conc",p:"Sobre o <b>IPv6</b>, qual afirmação é FALSA?",
+ o:["Endereços de 128 bits.","Cabeçalho fixo de 40 bytes.","Permite fragmentação nos roteadores intermediários.","Não tem checksum de cabeçalho."],c:2,
+ e:"FALSA: o IPv6 <b>não</b> fragmenta no caminho (só na origem). Ele tem 128 bits, cabeçalho fixo de 40 bytes, sem checksum, com anycast."},
+
+{a:5,t:"calc",p:"<b>Contagem de sub-redes</b>: 3 roteadores interligados dois a dois (3 enlaces roteador-roteador) + 3 redes de hosts. Quantas sub-redes há?",
+ o:["3","4","6","9"],c:2,
+ s:{d:["3 redes de hosts","3 enlaces ponto a ponto entre roteadores"],
+    f:"total = redes de host + enlaces entre roteadores",
+    k:["cada enlace entre roteadores TAMBÉM é uma sub-rede","= 3 + 3"],r:"6 sub-redes"}},
+
+{a:5,t:"calc",p:"<b>Buffer de roteador</b> pela regra clássica, com RTT = 200 ms e capacidade C = 10 Gbps.",
+ o:["2 Gb","50 Gb","200 Mb","20 Gb"],c:0,
+ s:{d:["RTT = 200 ms = 0,2 s","C = 10 Gbps = 10×10⁹ bps"],
+    f:"Buffer = RTT × C",
+    k:["= 0,2 × 10.000.000.000","= 2.000.000.000 bits"],r:"2 Gb (com N fluxos seria RTT×C/√N)"}},
+
+{a:5,t:"conc",p:"O <b>bloqueio de cabeça de fila (HOL blocking)</b> ocorre:",
+ o:["Na porta de saída.","Na porta de entrada, quando o pacote da frente bloqueia os de trás.","No processador de roteamento.","Só em IPv6."],c:1,
+ e:"HOL acontece na <b>entrada</b>: o pacote da frente, esperando uma saída ocupada, trava os de trás — degrada por volta de ~58% de carga."},
+
+{a:5,t:"conc",p:"No <b>OpenFlow (match+action)</b>, quais ações são possíveis?",
+ o:["Só encaminhar.","Encaminhar, descartar, modificar campos e enviar ao controlador.","Só descartar.","Apenas criptografar."],c:1,
+ e:"Match (campos das camadas 1–4) + Action (<b>forward / drop / modify / enviar ao controlador</b>) + contadores. Unifica roteador, switch, firewall e NAT."},
+
+{a:5,t:"conc",p:"A <b>MTU da Ethernet</b> e o local de <b>remontagem</b> de fragmentos são:",
+ o:["1500 bytes; no próximo roteador.","1500 bytes; no destino final.","576 bytes; na origem.","9000 bytes; no destino."],c:1,
+ e:"MTU Ethernet = <b>1500 bytes</b>; a remontagem ocorre só no <b>destino final</b>. Campos: identificação, flags e offset."},
+
+{a:5,t:"conc",p:"O modelo de serviço da camada de rede da <b>Internet</b> é:",
+ o:["Garante banda e ordem.","Best effort — sem garantia de banda, perda, ordem ou atraso.","Circuito virtual com reserva.","Garante atraso máximo."],c:1,
+ e:"A Internet é <b>best effort</b> (melhor esforço). Redes de circuito virtual (ex.: ATM) mantêm estado nos roteadores e nº de CV por enlace."},
+
+/* ================= AULA 6 ================= */
+{a:6,t:"conc",p:"Comparando <b>Estado de Enlace (LS)</b> e <b>Vetor de Distância (DV)</b>:",
+ o:["LS é descentralizado; DV é global.","LS é global (visão completa via difusão), O(n²); DV é descentralizado/iterativo, só fala com vizinhos.","Ambos são globais.","LS usa RIP; DV usa OSPF."],c:1,
+ e:"<b>LS</b> = OSPF (Dijkstra, global, O(n²)). <b>DV</b> = RIP (Bellman-Ford, distribuído, só vizinhos, 15 saltos)."},
+
+{a:6,t:"calc",p:"<b>Dijkstra</b>. Custos: u–x=1, x–y=1, y–z=2, u–w=5, w–z=5, u–v=2. Qual o menor custo de <b>u até z</b>?",
+ o:["10","4","6","8"],c:1,
+ s:{d:["caminho A: u→x→y→z","caminho B: u→w→z"],
+    f:"escolher o de menor soma de custos",
+    k:["A: 1 + 1 + 2 = 4","B: 5 + 5 = 10","min(4, 10)"],r:"4  (u → x → y → z)"}},
+
+{a:6,t:"calc",p:"<b>Bellman-Ford</b>: Dx(z) = min sobre vizinhos. Vizinhos de x: c(x,a)=2 e Da(z)=3; c(x,b)=5 e Db(z)=1; c(x,c)=1 e Dc(z)=8. Qual Dx(z)?",
+ o:["5 (via a)","6 (via b)","9 (via c)","11"],c:0,
+ s:{d:["via a: c(x,a)+Da(z) = 2+3","via b: c(x,b)+Db(z) = 5+1","via c: c(x,c)+Dc(z) = 1+8"],
+    f:"Dx(z) = min_v { c(x,v) + Dv(z) }",
+    k:["= min(5, 6, 9)"],r:"5  (pelo vizinho a)"}},
+
+{a:6,t:"conc",p:"Sobre <b>RIP e OSPF</b>:",
+ o:["RIP = LS, OSPF = DV.","RIP = DV (15 saltos, lento); OSPF = LS (Dijkstra, custos pelo admin).","Ambos são inter-AS.","RIP não tem limite de saltos."],c:1,
+ e:"<b>RIP</b> = vetor de distância, limitado a <b>15 saltos</b>, convergência lenta. <b>OSPF</b> = estado de enlace (Dijkstra), custos definidos pelo administrador."},
+
+{a:6,t:"conc",p:"A <b>ordem de seleção de rota do BGP</b> é:",
+ o:["AS-PATH → preferência local → IDs","Preferência local → AS-PATH mais curto → NEXT-HOP mais próximo (batata quente) → IDs","NEXT-HOP → IDs → preferência local","Aleatória"],c:1,
+ e:"1º <b>preferência local</b> (política) · 2º <b>AS-PATH mais curto</b> · 3º <b>NEXT-HOP mais próximo</b> (batata quente) · 4º desempate por identificadores."},
+
+{a:6,t:"conc",p:"O <b>eBGP</b> e o <b>iBGP</b> rodam sobre qual protocolo de transporte?",
+ o:["UDP","TCP","ICMP","QUIC"],c:1,
+ e:"O BGP roda sobre <b>TCP</b>. <b>eBGP</b> = entre ASs diferentes; <b>iBGP</b> = dentro do mesmo AS."},
+
+{a:6,t:"conc",p:"O atributo <b>AS-PATH</b> serve principalmente para:",
+ o:["Criptografar rotas.","Detectar e evitar laços (um AS que vê seu próprio ASN descarta a rota).","Medir a latência do enlace.","Definir o IP de destino."],c:1,
+ e:"O <b>AS-PATH</b> lista os ASs percorridos; evita loops (AS que vê o próprio ASN descarta) e serve de métrica (caminho mais curto)."},
+
+{a:6,t:"conc",p:"O <b>roteamento batata quente (hot potato)</b> consiste em:",
+ o:["Escolher a rota de menor atraso fim a fim.","Tirar o pacote do próprio AS o mais rápido possível (menor custo interno até o NEXT-HOP).","Enviar por todas as rotas.","Descartar pacotes com TTL alto."],c:1,
+ e:"Hot potato = algoritmo \"egoísta\": minimiza o custo <b>intra-AS</b> até o NEXT-HOP, sem se importar com o custo total fim a fim."},
+
+{a:6,t:"conc",p:"O <b>traceroute</b> PARA quando a origem recebe qual mensagem ICMP?",
+ o:["Tipo 8, código 0 (echo request)","Tipo 11, código 0 (TTL expirado)","Tipo 3, código 3 (porta inalcançável)","Tipo 0, código 0 (echo reply)"],c:2,
+ e:"Cada roteador do caminho devolve <b>11/0 (TTL expirado)</b>; o <b>destino</b> devolve <b>3/3 (porta inalcançável)</b> → sinal de parada."},
+
+{a:6,t:"conc",p:"O <b>ping</b> usa quais tipos de mensagem ICMP?",
+ o:["11/0 e 3/3","8/0 (request) e 0/0 (reply)","3/1 e 4/0","12/0 e 9/0"],c:1,
+ e:"Ping = <b>echo request (8/0)</b> + <b>echo reply (0/0)</b>."},
+
+{a:6,t:"conc",p:"Em SDN, \"<b>logicamente centralizado</b>\" significa:",
+ o:["Um único servidor físico controla tudo.","Uma visão única de controle, mas na prática o controlador é replicado/distribuído.","Não há controlador.","Cada roteador calcula sua própria rota."],c:1,
+ e:"Pegadinha: logicamente ≠ <b>fisicamente</b> centralizado. O controlador é replicado por desempenho e tolerância a falhas."},
+
+{a:6,t:"conc",p:"No <b>SNMP</b>, o modo <b>trap</b> é aquele em que:",
+ o:["O gerente pergunta e o agente responde.","O agente notifica espontaneamente um evento ao gerente.","O gerente configura o dispositivo.","Não há comunicação."],c:1,
+ e:"<b>Request/response</b> = polling (o gerente pergunta). <b>Trap</b> = notificação assíncrona do <b>agente</b> (ex.: uma interface caiu)."},
+
+{a:6,t:"conc",p:"Por que o roteamento <b>intra-AS</b> e <b>inter-AS</b> usam protocolos diferentes?",
+ o:["Por acaso histórico apenas.","Por política (acordos comerciais), escalabilidade e desempenho.","Porque inter-AS usa UDP.","Porque intra-AS não usa tabelas."],c:1,
+ e:"<b>Inter-AS</b> precisa expressar <b>política</b> (acordos entre ASs) e escalar; <b>intra-AS</b> tem dono único e pode focar em desempenho."}
+];
+
+/* ===== Questões abertas (dissertativas) ===== */
+const A=[
+/* AULA 1 */
+{a:1,p:`Qual a diferença entre <b>comutação de circuitos</b> e <b>comutação de pacotes</b>, e por que a Internet usa comutação de pacotes?`,
+ r:`Na <b>comutação de circuitos</b>, os recursos do caminho (banda) são <b>reservados</b> fim a fim para cada conexão — por FDM (uma faixa de frequência) ou TDM (fatias de tempo). Garante taxa constante, mas desperdiça capacidade quando o usuário fica em silêncio. Na <b>comutação de pacotes</b> não há reserva: os dados são divididos em pacotes que disputam os enlaces sob demanda (multiplexação estatística), com store-and-forward e filas nos roteadores. A Internet usa pacotes <b>porque o tráfego de dados é em rajadas</b>: a multiplexação estatística aproveita melhor a banda (cabem mais usuários no mesmo enlace) e a rede fica mais simples e barata — ao custo de atraso variável e possibilidade de perda.`},
+{a:1,p:`Qual a diferença entre <b>atraso de transmissão</b> e <b>atraso de propagação</b>? De que cada um depende?`,
+ r:`O <b>atraso de transmissão</b> é o tempo para empurrar todos os bits do pacote no enlace: <b>d_trans = L/R</b> — depende do tamanho do pacote (L) e da taxa do enlace (R). O <b>atraso de propagação</b> é o tempo para um bit percorrer fisicamente o meio: <b>d_prop = d/s</b> — depende da distância (d) e da velocidade de propagação (s). São <b>independentes</b>: um pacote pequeno num enlace longo tem transmissão baixa e propagação alta. Em uma frase: transmissão é "quão rápido coloco os bits no fio"; propagação é "quanto tempo o bit leva para atravessar o fio".`},
+{a:1,p:`O que é o <b>enlace gargalo (bottleneck)</b> e como ele determina a vazão fim a fim?`,
+ r:`Num caminho com vários enlaces de taxas diferentes, o <b>gargalo é o de menor taxa</b>. A vazão fim a fim é limitada por ele: <b>vazão = min(R1, R2, ..., RN)</b>. Não adianta um enlace de 1 Gbps se o caminho passa por um de 10 Mbps — a transferência anda no ritmo do mais lento. Quando um enlace do núcleo é compartilhado por N conexões, cada uma recebe uma fração (ex.: R/N), que pode se tornar o novo gargalo.`},
+{a:1,p:`O que é uma <b>arquitetura em camadas</b> e por que a Internet é organizada assim?`,
+ r:`Cada camada oferece um serviço à camada de cima usando os serviços da camada de baixo, sem precisar conhecer os detalhes internos das outras. As 5 camadas da Internet são <b>aplicação, transporte, rede, enlace e física</b>. A vantagem é a <b>modularização</b>: pode-se mudar ou atualizar uma camada (ex.: trocar Wi-Fi por Ethernet no enlace) sem afetar as demais, e fica mais fácil dividir responsabilidades. O custo é uma sobrecarga de cabeçalhos (encapsulamento).`},
+{a:1,p:`O que muda no processamento de um pacote entre um <b>switch</b>, um <b>roteador</b> e um <b>host</b>?`,
+ r:`O <b>host</b> implementa a pilha completa (5 camadas). O <b>switch</b> processa só até a camada de <b>enlace</b> — encaminha quadros olhando o endereço MAC, sem examinar o datagrama IP. O <b>roteador</b> processa até a camada de <b>rede</b> — desencapsula até o datagrama, decide a rota pelo IP de destino e reencapsula. Por isso o switch atua dentro de uma mesma rede e o roteador interliga redes diferentes.`},
+{a:1,p:`O que é <b>encapsulamento</b>? Cite o nome da unidade de dados (PDU) em cada camada.`,
+ r:`Encapsulamento é o processo em que cada camada, ao receber os dados da camada de cima, acrescenta o seu próprio <b>cabeçalho</b>. A <b>mensagem</b> (aplicação) vira <b>segmento</b> ao ganhar o cabeçalho de transporte, que vira <b>datagrama</b> com o cabeçalho de rede, que vira <b>quadro (frame)</b> com o cabeçalho de enlace. No destino ocorre o inverso (desencapsulamento), subindo as camadas até entregar a mensagem à aplicação.`},
+/* AULA 2 */
+{a:2,p:`Qual a diferença entre as arquiteturas <b>cliente-servidor</b> e <b>P2P</b>, e por que o P2P é "autoescalável"?`,
+ r:`No <b>cliente-servidor</b> há um servidor sempre ligado, com IP fixo, que atende todos os clientes (que não falam entre si); escala-se comprando mais servidores (datacenters). No <b>P2P</b> não há servidor central: os pares se comunicam diretamente e cada par <b>consome E provê</b> serviço. É autoescalável porque cada novo par que chega adiciona demanda, mas <b>também adiciona capacidade de upload</b> ao sistema — a capacidade cresce junto com a carga. O custo é a complexidade de gerência, segurança e a necessidade de incentivos à contribuição.`},
+{a:2,p:`Por que o HTTP é dito <b>"sem estado" (stateless)</b>, e como os cookies contornam isso?`,
+ r:`O HTTP é sem estado porque o servidor <b>não guarda informação sobre requisições anteriores</b> do mesmo cliente — cada requisição é tratada isoladamente. Isso simplifica e escala o servidor, mas impede reconhecer o usuário entre requisições. Os <b>cookies</b> resolvem: na primeira resposta o servidor manda <b>Set-cookie</b> com um ID; o navegador guarda num arquivo e reenvia esse ID (<b>Cookie:</b>) nas próximas requisições; o servidor associa o ID a um registro no seu banco de dados. Assim mantém sessão, carrinho e recomendações — com implicações de privacidade.`},
+{a:2,p:`Qual a diferença entre conexões HTTP <b>persistentes</b> e <b>não persistentes</b>, e por que isso importa no desempenho?`,
+ r:`Na <b>não persistente</b>, cada objeto exige uma conexão TCP própria (abre e fecha para cada um), gastando <b>2 RTT por objeto</b> (1 do handshake + 1 da requisição/resposta). Na <b>persistente</b>, vários objetos são transferidos na mesma conexão TCP, pagando o handshake uma vez só e ~1 RTT por objeto seguinte. Para uma página com muitos objetos, a persistente <b>reduz bastante o tempo total</b> e a sobrecarga de abrir conexões.`},
+{a:2,p:`Qual a diferença entre a consulta DNS <b>iterativa</b> e a <b>recursiva</b>?`,
+ r:`Na <b>iterativa</b>, cada servidor consultado responde "não sei, pergunte a fulano" — o <b>servidor local</b> vai perguntando à raiz, depois ao TLD, depois ao autoritativo, fazendo todo o trabalho. Na <b>recursiva</b>, cada servidor <b>repassa a consulta adiante</b> em nome do solicitante ("resolva para mim") e a resposta volta pela mesma cadeia. A recursiva concentra a carga nos níveis altos (raiz/TLD), por isso na prática esses servidores preferem responder de forma iterativa.`},
+{a:2,p:`Qual a diferença entre <b>SMTP</b> e <b>HTTP</b> na forma de transferir conteúdo?`,
+ r:`O <b>SMTP</b> é um protocolo de <b>empurrar (push)</b>: o servidor de origem age como cliente e envia a mensagem ao servidor de destino (TCP 25). O <b>HTTP</b> é de <b>puxar (pull)</b>: o cliente requisita e o servidor responde com o objeto (TCP 80). Além disso, o SMTP historicamente exige conteúdo em <b>ASCII de 7 bits</b> (daí o MIME para anexos) e junta várias partes numa mensagem, enquanto o HTTP não restringe o formato e usa uma resposta por objeto.`},
+{a:2,p:`Qual a diferença entre <b>POP3</b> e <b>IMAP</b>?`,
+ r:`O <b>POP3</b> (TCP 110) é simples: normalmente <b>baixa as mensagens</b> para o cliente e as <b>apaga do servidor</b>, sem manter estado nem pastas no servidor. O <b>IMAP</b> mantém as mensagens e as <b>pastas no próprio servidor</b>, guarda estado entre sessões e permite baixar só partes de uma mensagem (ex.: só o cabeçalho). Por isso o IMAP é melhor para quem acessa o e-mail de vários dispositivos, mantendo tudo sincronizado.`},
+{a:2,p:`Por que o <b>QUIC</b> é chamado de protocolo de transporte, mesmo rodando sobre UDP? (pegadinha do slide)`,
+ r:`Porque ele <b>implementa as funções de um protocolo de transporte</b> — estabelecimento de conexão, transferência confiável, controle de congestionamento e múltiplos streams — só que construído <b>sobre o UDP</b> (e implementado na camada de aplicação, o que facilita evoluir sem mexer no núcleo/roteadores). É a base do HTTP/3, embute a criptografia do TLS e faz o handshake em ~1 RTT. A pegadinha é justamente essa: <b>QUIC é transporte</b>, não aplicação.`},
+/* AULA 3 */
+{a:3,p:`Qual a diferença entre <b>TCP</b> e <b>UDP</b>, e por que usar UDP se ele não é confiável?`,
+ r:`O <b>TCP</b> é confiável e orientado à conexão, com controle de fluxo e de congestionamento; o <b>UDP</b> é "melhor esforço", sem conexão, sem garantia de entrega, ordem ou controle de taxa. Usa-se UDP porque ele é <b>leve e rápido</b>: não tem handshake (menos atraso inicial), não mantém estado (o servidor atende mais clientes), tem cabeçalho pequeno (8 bytes) e não reduz a taxa por congestionamento (bom para tempo real). Aplicações como DNS, streaming e jogos preferem UDP; se precisarem de confiabilidade, a implementam na própria aplicação (ideia do QUIC).`},
+{a:3,p:`Qual a diferença entre a <b>demultiplexação</b> no UDP e no TCP?`,
+ r:`No <b>UDP</b>, o socket é identificado por apenas <b>dois campos</b>: IP e porta de destino — segmentos de origens diferentes com o mesmo destino caem no mesmo socket. No <b>TCP</b>, o socket é identificado pela <b>quádrupla</b> (IP origem, porta origem, IP destino, porta destino) — assim o servidor mantém um socket separado por conexão, e dois clientes podem até usar a mesma porta de origem sem se misturarem, porque o IP de origem difere.`},
+{a:3,p:`Qual a diferença entre <b>Go-Back-N</b> e <b>Repetição Seletiva</b>?`,
+ r:`No <b>Go-Back-N</b> o receptor só usa <b>ACK cumulativo</b> e descarta pacotes fora de ordem; o emissor tem um <b>único temporizador</b> (do pacote mais antigo sem ACK) e, ao estourar, retransmite <b>todos</b> os pacotes não confirmados. Na <b>Repetição Seletiva</b> o receptor dá <b>ACK individual</b> e <b>armazena os fora de ordem num buffer</b>; o emissor tem um <b>temporizador por pacote</b> e retransmite <b>só o que faltou</b>. O GBN é mais simples mas desperdiça retransmissões; o SR é eficiente mas exige buffer no receptor e mais controle.`},
+{a:3,p:`Explique a evolução do <b>rdt (transferência confiável)</b>: que problema cada versão resolve?`,
+ r:`O <b>rdt 1.0</b> assume canal perfeito (só envia e entrega). O <b>rdt 2.0</b> trata <b>erros de bits</b> com checksum + ACK/NAK + retransmissão (protocolo ARQ). O <b>rdt 2.1/2.2</b> acrescenta <b>número de sequência</b> para lidar com ACK/NAK corrompidos e descartar duplicatas (a 2.2 elimina o NAK usando ACK duplicado). O <b>rdt 3.0</b> acrescenta um <b>temporizador</b> para tratar <b>perdas</b> de pacotes/ACKs: se o ACK não chega no tempo, retransmite (o número de sequência evita entregar duplicata). É o "protocolo de alternância de bits".`},
+{a:3,p:`Por que o protocolo <b>pare-e-espere</b> tem baixo desempenho, e como o <b>pipelining</b> resolve?`,
+ r:`No pare-e-espere o emissor manda um pacote e fica <b>ocioso esperando o ACK</b>, que leva cerca de um RTT; ele só transmite durante L/R a cada ciclo de RTT+L/R, então a utilização <b>U = (L/R)/(RTT+L/R)</b> é minúscula quando o RTT é grande. O <b>pipelining</b> permite ter <b>vários pacotes "no ar"</b> ao mesmo tempo, multiplicando a utilização por N (<b>U = N·(L/R)/(RTT+L/R)</b>) até saturar o enlace. É a base do Go-Back-N e da Repetição Seletiva.`},
+/* AULA 4 */
+{a:4,p:`Qual a diferença entre <b>controle de fluxo</b> e <b>controle de congestionamento</b> no TCP?`,
+ r:`Os dois limitam a taxa do emissor, mas por motivos diferentes. O <b>controle de fluxo</b> protege o <b>receptor</b>: ele anuncia na janela de recepção (<b>rwnd</b>) quanto espaço livre tem no buffer, e o emissor não envia mais dados não confirmados do que isso, para não estourar o buffer do receptor. O <b>controle de congestionamento</b> protege a <b>rede</b>: o emissor ajusta a janela de congestionamento (<b>cwnd</b>) conforme o congestionamento percebido (perdas/atrasos). Na prática, os dados em trânsito respeitam <b>min(cwnd, rwnd)</b>.`},
+{a:4,p:`Explique as <b>fases do controle de congestionamento</b> do TCP e o que acontece em cada tipo de perda.`,
+ r:`Começa em <b>slow start</b>: cwnd = 1 MSS e cresce 1 MSS por ACK, <b>dobrando a cada RTT</b> (exponencial), até atingir o limiar <b>ssthresh</b>. Aí entra em <b>congestion avoidance</b>, crescendo 1 MSS por RTT (<b>linear</b>, o "AI" do AIMD). Ao ocorrer perda: se for por <b>timeout</b>, ssthresh = cwnd/2 e cwnd volta a 1 MSS (recomeça slow start); se for por <b>3 ACKs duplicados</b>, corta a janela pela metade e entra em fast recovery (o "MD"). Esse ciclo gera o "dente de serra" do TCP, que fica sondando a banda disponível.`},
+{a:4,p:`Qual a diferença entre <b>TCP Tahoe</b> e <b>TCP Reno</b>?`,
+ r:`Ambos usam slow start e congestion avoidance, mas reagem diferente à perda por <b>3 ACKs duplicados</b>. O <b>Tahoe</b> trata qualquer perda igual: reduz cwnd para <b>1 MSS</b> e reinicia slow start. O <b>Reno</b> distingue: em 3 ACKs duplicados faz retransmissão rápida e <b>fast recovery</b> (corta a janela pela metade e segue em crescimento linear), reservando o "voltar a 1" apenas para o <b>timeout</b>. Por isso o Reno se recupera mais rápido de perdas leves.`},
+{a:4,p:`Por que a "conexão" TCP <b>não</b> é comutação de circuitos?`,
+ r:`Porque a conexão TCP é <b>puramente lógica</b>: ela existe apenas como <b>estado</b> (números de sequência, janelas) nos dois sistemas finais. Os roteadores no caminho <b>não sabem</b> que ela existe e <b>não reservam nenhum recurso</b> para ela — a rede continua encaminhando pacotes por melhor esforço. Na comutação de circuitos, ao contrário, os comutadores do caminho participam e reservam banda para a conexão.`},
+{a:4,p:`Para que serve o <b>handshake de três vias</b>, e como ele funciona?`,
+ r:`Serve para os dois lados <b>estabelecerem a conexão</b> e combinarem os números de sequência iniciais antes de trocar dados. Funciona em três passos: o cliente envia <b>SYN</b> (com seu número de sequência inicial); o servidor responde <b>SYN+ACK</b> (aceitando e enviando o seu); o cliente responde <b>ACK</b> (que já pode carregar dados). A partir daí a conexão está aberta e confiável nos dois sentidos.`},
+{a:4,p:`O que é a <b>retransmissão rápida (fast retransmit)</b> e por que ela existe?`,
+ r:`É a retransmissão de um segmento perdido assim que o emissor recebe <b>3 ACKs duplicados</b>, <b>sem esperar o temporizador estourar</b>. Ela existe porque o timeout costuma ser longo, e esperar por ele atrasaria muito a recuperação. Quando um segmento se perde mas os seguintes chegam, cada um gera um ACK duplicado apontando a lacuna; três desses são um sinal forte de perda, então o TCP já retransmite.`},
+/* AULA 5 */
+{a:5,p:`Qual a diferença entre <b>repasse (forwarding)</b> e <b>roteamento (routing)</b>?`,
+ r:`O <b>repasse</b> é uma ação <b>local</b>, do plano de dados: mover um pacote da porta de entrada para a porta de saída correta <b>dentro de um único roteador</b>, consultando a tabela de repasse; é rápido (hardware, nanossegundos). O <b>roteamento</b> é um processo <b>global</b>, do plano de controle: determinar o <b>caminho fim a fim</b> que os pacotes seguem pela rede, usando algoritmos de roteamento (software, milissegundos). Em resumo: o roteamento decide as rotas e preenche as tabelas; o repasse apenas as executa.`},
+{a:5,p:`Qual a diferença entre uma rede de <b>datagramas</b> e uma de <b>circuitos virtuais</b>?`,
+ r:`Na rede de <b>datagramas</b> (a Internet) não há estabelecimento de conexão nem estado nos roteadores; cada pacote é encaminhado isoladamente pelo <b>endereço de destino</b>, e dois pacotes ao mesmo destino podem seguir caminhos diferentes. Na rede de <b>circuitos virtuais</b> (ex.: ATM) há três fases (estabelecer, transferir, encerrar), cada roteador guarda <b>estado da conexão</b> e usa um número de CV que muda a cada enlace. Datagrama coloca a complexidade na <b>borda</b> (rede simples); circuito virtual coloca a complexidade no <b>núcleo</b>.`},
+{a:5,p:`O que é o <b>NAT</b> e como ele funciona, com sua tabela de tradução?`,
+ r:`O <b>NAT</b> permite que uma rede privada, usando endereços privados (RFC 1918: 10/8, 172.16/12, 192.168/16), compartilhe <b>um único IP público</b>. Na saída, o roteador NAT troca o <b>(IP privado, porta)</b> de origem por <b>(IP público, nova porta)</b> e registra esse mapeamento na <b>tabela NAT</b>. Na volta, a resposta chega ao (IP público, porta); o NAT consulta a tabela e reescreve o destino de volta para o (IP privado, porta) original. Assim vários hosts internos são multiplexados <b>por porta</b> em um só IP público.`},
+{a:5,p:`Como funciona o <b>DHCP</b>, e o que ele fornece além do endereço IP?`,
+ r:`O DHCP dá ao host um IP automaticamente ao entrar na rede, em quatro mensagens (<b>DORA</b>): <b>Discover</b> (o cliente pergunta, em broadcast, se há servidor), <b>Offer</b> (o servidor oferece um IP), <b>Request</b> (o cliente pede aquele IP) e <b>ACK</b> (o servidor confirma, com um prazo/lease). Usa UDP, <b>servidor na porta 67 e cliente na 68</b>. Além do IP, fornece a <b>máscara de sub-rede, o gateway padrão e o servidor DNS</b> — por isso é "plug-and-play".`},
+{a:5,p:`Quais as principais diferenças do <b>IPv6</b> em relação ao IPv4, e por que ele surgiu?`,
+ r:`O IPv6 surgiu porque os endereços IPv4 (32 bits) <b>se esgotaram</b>. Ele usa endereços de <b>128 bits</b>, tem <b>cabeçalho fixo de 40 bytes</b> (mais simples de processar), <b>não permite fragmentação nos roteadores</b> do caminho (só na origem), <b>não tem checksum de cabeçalho</b> (menos processamento por salto), introduz o tipo <b>anycast</b> e um rótulo de fluxo, e usa o <b>ICMPv6</b>. A transição do IPv4 se faz por <b>pilha dupla</b> (nós que falam as duas versões) e por <b>tunelamento</b> (datagrama IPv6 dentro de um IPv4 para atravessar trechos que só falam v4).`},
+{a:5,p:`O que é o <b>repasse generalizado (match+action)</b> do OpenFlow, e por que ele é poderoso?`,
+ r:`Em vez de encaminhar olhando só o IP de destino, cada regra <b>casa (match)</b> um conjunto de campos de várias camadas (porta de entrada, MACs, VLAN, IPs, protocolo, portas TCP/UDP) e executa uma <b>ação</b> (encaminhar, descartar, modificar campos ou enviar ao controlador). É poderoso porque um <b>mesmo dispositivo programável</b> passa a fazer o papel de roteador, switch, firewall e NAT, conforme as regras instaladas pelo controlador — é a base da SDN.`},
+/* AULA 6 */
+{a:6,p:`Qual a diferença entre os algoritmos de <b>estado de enlace (LS)</b> e de <b>vetor de distância (DV)</b>?`,
+ r:`O <b>LS (Dijkstra)</b> é <b>global</b>: por difusão, todos os roteadores conhecem a topologia e os custos completos da rede, e cada um calcula localmente os menores caminhos; tem complexidade <b>O(n²)</b> e é usado pelo <b>OSPF</b>. O <b>DV (Bellman-Ford)</b> é <b>descentralizado, iterativo e assíncrono</b>: cada roteador só conhece os custos até seus vizinhos e os vetores que eles enviam, atualizando D_x(y) = min sobre vizinhos de (c(x,v)+D_v(y)) e avisando os vizinhos quando muda; é usado pelo <b>RIP</b>. No DV, boas notícias andam rápido e más notícias andam devagar (contagem ao infinito).`},
+{a:6,p:`Qual a diferença entre <b>RIP</b> e <b>OSPF</b>?`,
+ r:`São dois protocolos <b>intra-AS</b>. O <b>RIP</b> é de <b>vetor de distância</b>, usa contagem de saltos como métrica, é limitado a <b>15 saltos</b> (16 = inalcançável) e converge lentamente. O <b>OSPF</b> é de <b>estado de enlace</b>: cada roteador difunde os estados dos seus enlaces e roda Dijkstra; os <b>custos são definidos pelo administrador</b> (permitindo engenharia de tráfego) e a convergência é mais rápida. Em resumo, OSPF é mais robusto e escalável que o RIP.`},
+{a:6,p:`Por que existem protocolos de roteamento diferentes <b>dentro (intra-AS)</b> e <b>entre (inter-AS)</b> sistemas autônomos?`,
+ r:`Por três razões. <b>Política</b>: entre ASs há acordos comerciais e um AS pode se recusar a transportar tráfego de terceiros, então o inter-AS precisa expressar política; dentro de um AS há um dono só, política é irrelevante. <b>Escalabilidade</b>: a hierarquia (AS) reduz o tamanho das tabelas e o tráfego de atualização — seria impossível difundir o estado de milhões de roteadores. <b>Desempenho</b>: o intra-AS pode focar em otimizar custo/latência, enquanto no inter-AS a política costuma pesar mais que o desempenho.`},
+{a:6,p:`Explique o <b>BGP</b>: para que serve e o papel dos atributos <b>AS-PATH</b> e <b>NEXT-HOP</b>.`,
+ r:`O <b>BGP</b> é o protocolo <b>inter-AS</b> que "cola" os milhares de sistemas autônomos da Internet; ele roteia por <b>prefixos</b> e roda sobre <b>TCP</b> (eBGP entre ASs, iBGP dentro do AS). Cada rota anunciada vem com atributos: o <b>AS-PATH</b> é a lista de ASs por onde o anúncio passou — serve para <b>evitar laços</b> (um AS que vê o próprio número no caminho descarta a rota) e como métrica de caminho curto; o <b>NEXT-HOP</b> é o IP do roteador que deve ser usado como próximo salto para alcançar aquele prefixo.`},
+{a:6,p:`O que é o <b>roteamento "batata quente" (hot potato)</b>?`,
+ r:`É a política de, entre as rotas válidas para um destino, escolher aquela cujo roteador de saída (NEXT-HOP) tem o <b>menor custo interno (intra-AS)</b> — ou seja, entregar o pacote para fora do próprio AS <b>o mais rápido e barato possível</b>, sem se importar com o custo total do caminho fim a fim. É chamado de "egoísta" porque minimiza só o custo interno. No BGP, entra como um dos critérios de desempate (depois da preferência local e do AS-PATH mais curto).`},
+{a:6,p:`Como o <b>traceroute</b> funciona usando o ICMP, e como ele sabe a hora de parar?`,
+ r:`O traceroute envia pacotes com <b>TTL crescente</b>: 1, 2, 3... para uma porta improvável no destino. Cada roteador do caminho, ao decrementar o TTL até zero, descarta o pacote e devolve à origem uma mensagem <b>ICMP tipo 11 código 0 (TTL expirado)</b>, revelando seu endereço e o tempo de ida e volta. Ele <b>para</b> quando o pacote finalmente chega ao destino: como a porta é improvável, o destino responde com <b>ICMP tipo 3 código 3 (porta inalcançável)</b> — esse é o sinal de que se chegou ao fim do caminho.`}
+];
+
+/* ---------- render ---------- */
+const list=document.getElementById('list');
+const letras=['A','B','C','D'];
+let filtro='todas';
+let order=Q.map((_,i)=>i);
+let ordemAbertas=A.map((_,i)=>i);
+let todasVisiveis=false;
+function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+const chipsDef=[['todas','Todas'],['abertas','✍️ Questões abertas'],['calc','🧮 Só cálculos'],
+  ['a1','Aula 1'],['a2','Aula 2'],['a3','Aula 3'],['a4','Aula 4'],['a5','Aula 5'],['a6','Aula 6']];
+const chipsEl=document.getElementById('chips');
+chipsDef.forEach(([id,label])=>{
+  const b=document.createElement('button');
+  b.className='chip'+(id==='calc'?' calc':'')+(id==='abertas'?' open':'')+(id==='todas'?' active':'');
+  b.textContent=label; b.dataset.id=id;
+  b.onclick=()=>{filtro=id;[...chipsEl.children].forEach(c=>c.classList.remove('active'));
+    b.classList.add('active');render();};
+  chipsEl.appendChild(b);
+});
+
+function passaFiltro(q){
+  if(filtro==='todas')return true;
+  if(filtro==='calc')return q.t==='calc';
+  return ('a'+q.a)===filtro;
+}
+
+function render(){
+  list.innerHTML='';
+  const openMode=(filtro==='abertas');
+  document.body.dataset.mode=openMode?'abertas':'mc';
+  if(openMode){renderAbertas();return;}
+  const vis=order.map(i=>Q[i]).filter(passaFiltro);
+  if(!vis.length){list.innerHTML='<div class="empty">Nenhuma questão neste filtro.</div>';return;}
+  vis.forEach((q,pos)=>{
+    const card=document.createElement('div');
+    card.className='card';
+    const tipoBadge=q.t==='calc'?'<span class="badge tipo-calc">🧮 Cálculo</span>':'<span class="badge tipo-conc">💡 Conceito</span>';
+    card.innerHTML=`<div class="card-head">
+        <span class="badge aula-${q.a}">Aula ${q.a}</span>${tipoBadge}
+        <span class="qnum">Questão ${pos+1}</span></div>
+      <div class="pergunta">${q.p}</div>
+      <div class="opcoes"></div>
+      <div class="feedback" hidden></div>`;
+    const opc=card.querySelector('.opcoes');
+    const fb=card.querySelector('.feedback');
+    const perm=q.perm||q.o.map((_,i)=>i);
+    perm.forEach((oi,dp)=>{
+      const btn=document.createElement('button');
+      btn.className='opcao';
+      btn.innerHTML=`<span class="letra">${letras[dp]}</span><span class="txt">${q.o[oi]}</span>`;
+      btn.onclick=()=>answer(q,oi,opc,fb);
+      opc.appendChild(btn);
+    });
+    if(q.ans!=null) applyState(q,opc,fb);
+    list.appendChild(card);
+  });
+}
+
+function answer(q,i,opc,fb){
+  if(q.ans!=null)return;
+  q.ans=i;
+  applyState(q,opc,fb);
+  updateScore();
+}
+
+function applyState(q,opc,fb){
+  const perm=q.perm||q.o.map((_,i)=>i);
+  [...opc.children].forEach((btn,j)=>{
+    const oi=perm[j];
+    btn.disabled=true;
+    if(oi===q.c)btn.classList.add('correct');
+    else if(oi===q.ans)btn.classList.add('wrong');
+    else btn.classList.add('dim');
+    if(oi===q.c){const m=document.createElement('span');m.className='mark';m.textContent='✓';btn.appendChild(m);}
+    else if(oi===q.ans){const m=document.createElement('span');m.className='mark';m.textContent='✗';btn.appendChild(m);}
+  });
+  fb.hidden=false;
+  if(q.t==='calc'&&q.s){
+    fb.innerHTML=solucaoHTML(q.s);
+  }else{
+    const acertou=q.ans===q.c;
+    fb.innerHTML=`<div class="explica"><b>${acertou?'✔ Correto!':'✗ Resposta certa: '+letras[perm.indexOf(q.c)]}</b> — ${q.e}</div>`;
+  }
+}
+
+function solucaoHTML(s){
+  let linhas='';
+  s.d.forEach((x,i)=>{linhas+=`<div class="sol-linha"><span class="sol-rot">${i===0?'Dados':''}</span><span class="sol-exp">${x}</span></div>`;});
+  linhas+=`<div class="sol-linha"><span class="sol-rot">Fórmula</span><span class="sol-exp mono">${s.f}</span></div>`;
+  s.k.forEach((x,i)=>{linhas+=`<div class="sol-linha"><span class="sol-rot">${i===0?'Conta':''}</span><span class="sol-exp mono">${x}</span></div>`;});
+  return `<div class="solucao"><div class="sol-titulo">✏️ Resolução passo a passo</div>
+    ${linhas}
+    <div class="sol-resposta">Resposta: <strong>${s.r}</strong></div></div>`;
+}
+
+function renderAbertas(){
+  const vis=ordemAbertas.map(i=>A[i]);
+  vis.forEach((q,pos)=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=`<div class="card-head">
+        <span class="badge aula-${q.a}">Aula ${q.a}</span>
+        <span class="badge tipo-open">✍️ Aberta</span>
+        <span class="qnum">Questão ${pos+1}</span></div>
+      <div class="pergunta">${q.p}</div>
+      <button class="reveal">👁 Mostrar resposta</button>
+      <div class="resposta" hidden><div class="rtit">✍️ Resposta modelo</div>${q.r}</div>`;
+    const btn=card.querySelector('.reveal');
+    const resp=card.querySelector('.resposta');
+    function sync(){resp.hidden=!q.shown;btn.textContent=q.shown?'🙈 Ocultar resposta':'👁 Mostrar resposta';}
+    btn.onclick=()=>{q.shown=!q.shown;sync();};
+    if(q.shown)sync();
+    list.appendChild(card);
+  });
+}
+
+function updateScore(){
+  const ans=Q.filter(q=>q.ans!=null);
+  const hits=ans.filter(q=>q.ans===q.c).length;
+  document.getElementById('hits').textContent=hits;
+  document.getElementById('answered').textContent=ans.length;
+  const pct=ans.length?Math.round(hits/ans.length*100):0;
+  document.getElementById('pct').textContent=pct+'%';
+  document.getElementById('barfill').style.width=(ans.length/Q.length*100)+'%';
+}
+
+document.getElementById('reset').onclick=()=>{
+  Q.forEach(q=>q.ans=null);render();updateScore();
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+document.getElementById('shuffle').onclick=()=>{
+  if(filtro==='abertas'){shuffleArr(ordemAbertas);}
+  else{shuffleArr(order);Q.forEach(q=>{q.perm=shuffleArr(q.o.map((_,i)=>i));q.ans=null;});}
+  render();updateScore();
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+document.getElementById('revealAll').onclick=()=>{
+  todasVisiveis=!todasVisiveis;
+  A.forEach(q=>q.shown=todasVisiveis);
+  document.getElementById('revealAll').textContent=todasVisiveis?'🙈 Ocultar todas as respostas':'👁 Mostrar todas as respostas';
+  render();
+};
+
+document.getElementById('count').textContent=`${Q.length} questões de marcar · ${Q.filter(q=>q.t==='calc').length} de cálculo · ${A.length} questões abertas`;
+
+/* theme */
+const themeBtn=document.getElementById('theme');
+function isDark(){const t=document.documentElement.getAttribute('data-theme');
+  if(t)return t==='dark';return matchMedia('(prefers-color-scheme: dark)').matches;}
+function syncIcon(){themeBtn.textContent=isDark()?'☀️':'🌙';}
+themeBtn.onclick=()=>{document.documentElement.setAttribute('data-theme',isDark()?'light':'dark');syncIcon();};
+syncIcon();
+
+render();updateScore();
+</script>
+</body>
+</html>
